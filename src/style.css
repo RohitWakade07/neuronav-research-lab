@@ -750,6 +750,18 @@ input[type="range"] {
   background: #111a15;
   border-left: 2px solid #c6f36b;
 }
+.twin-safety {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid #334239;
+  font-size: 10px;
+  color: #9aab9d;
+}
+.twin-safety b { color: #c6f36b; font-weight: 600; margin-left: 5px; }
+.decision.brake { color: #ffaaa2; }
+.decision.brake i { background: #ff6d68; }
 .twin-explanation span {
   font-size: 8px;
   color: #a4b69e;

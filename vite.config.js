@@ -13,4 +13,16 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    proxy: {
+      "/sim_trace.json": {
+        target: "http://127.0.0.1:8765",
+        changeOrigin: true,
+      },
+      "/step": {
+        target: "http://127.0.0.1:8766",
+        changeOrigin: true,
+      },
+    },
+  },
 });

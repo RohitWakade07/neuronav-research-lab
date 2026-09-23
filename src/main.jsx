@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Activity,
@@ -163,14 +163,55 @@ function Lab() {
     [lanes, setLanes] = useState(16),
     [clock, setClock] = useState(50),
     [bits, setBits] = useState(8);
-  const rows = useMemo(
+  const [hwTwin, setHwTwin] = useState(false);
+  const [hwData, setHwData] = useState(null);
+
+  useEffect(() => {
+    if (!hwTwin) return;
+    const fetchTwin = async () => {
+      try {
+        const res = await fetch("/sim_trace.json?t=" + Date.now());
+        if (res.ok) {
+          const json = await res.json();
+          setHwData(json);
+        }
+      } catch (err) {
+        console.error("Twin fetch failed", err);
+      }
+    };
+    fetchTwin();
+    const interval = setInterval(fetchTwin, 500);
+    return () => clearInterval(interval);
+  }, [hwTwin]);
+
+  const simRows = useMemo(
     () => simulate({ current, beta, threshold, pattern }),
     [current, beta, threshold, pattern],
   );
+
+  const isHwActive = hwTwin && hwData?.trace;
+  
+  const rows = isHwActive
+    ? hwData.trace.slice(-100).map((t, i) => ({
+        t: i,
+        input: t.input_current,
+        pre: t.mem_next_pre_threshold,
+        membrane: t.mem_out,
+        spike: t.spike,
+        floatPre: t.mem_next_pre_threshold, 
+        floatMembrane: t.mem_out,
+        floatSpike: t.spike,
+        saturated: false
+      }))
+    : simRows;
+
+  const activeThreshold = isHwActive ? hwData.metadata.parameters.THRESHOLD : threshold;
+  const activeBeta = isHwActive ? hwData.metadata.parameters.BETA_Q : beta;
+
   const result = estimate({ hidden, steps, lanes, clock, bits });
-  const config = { current, beta, threshold, pattern };
+  const config = { current, beta: activeBeta, threshold: activeThreshold, pattern };
   const spikeCount = rows.reduce((a, r) => a + r.spike, 0),
-    mismatches = rows.filter((r) => r.spike !== r.floatSpike).length;
+    mismatches = isHwActive ? hwData.trace.filter(t => !t.match).length : rows.filter((r) => r.spike !== r.floatSpike).length;
   const exportRun = () =>
     download(
       "neuronav-run.json",
@@ -202,8 +243,8 @@ function Lab() {
           <h2>From a spike to a system.</h2>
         </div>
         <span className="status">
-          <span />
-          Browser simulation
+          <span style={{ background: isHwActive ? '#c6f36b' : '#73a754' }} />
+          {isHwActive ? 'Hardware Twin Live' : 'Browser simulation'}
         </span>
       </div>
       <div className="lab-toolbar">
@@ -225,9 +266,19 @@ function Lab() {
             Architecture
           </button>
         </div>
-        <IconButton title="Export simulation JSON" onClick={exportRun}>
-          <Download size={18} />
-        </IconButton>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="icon-button"
+            style={{ width: 'auto', padding: '0 12px', fontSize: '11px', color: hwTwin ? '#c6f36b' : 'inherit', borderColor: hwTwin ? '#58774a' : 'inherit', background: hwTwin ? '#111a15' : 'transparent' }}
+            onClick={() => setHwTwin(!hwTwin)}
+            title="Toggle RTL Hardware Twin Sync"
+          >
+            ⚡ HW Twin: {hwTwin ? 'ON' : 'OFF'}
+          </button>
+          <IconButton title="Export simulation JSON" onClick={exportRun}>
+            <Download size={18} />
+          </IconButton>
+        </div>
       </div>
       {tab === "neuron" ? (
         <div className="lab-grid">
@@ -251,35 +302,43 @@ function Lab() {
               <select
                 value={pattern}
                 onChange={(e) => setPattern(e.target.value)}
+                disabled={isHwActive}
               >
                 <option value="constant">Constant current</option>
                 <option value="burst">Burst train</option>
                 <option value="pulse">Periodic pulses</option>
               </select>
             </label>
-            <Slider
-              label="Input current"
-              value={current}
-              min={0}
-              max={100}
-              onChange={setCurrent}
-            />
-            <Slider
-              label="Decay coefficient"
-              value={beta}
-              min={0}
-              max={255}
-              onChange={setBeta}
-              suffix=" / 256"
-            />
-            <Slider
-              label="Firing threshold"
-              value={threshold}
-              min={32}
-              max={512}
-              step={16}
-              onChange={setThreshold}
-            />
+            <div style={{ opacity: isHwActive ? 0.5 : 1, pointerEvents: isHwActive ? 'none' : 'auto' }}>
+              <Slider
+                label="Input current"
+                value={current}
+                min={0}
+                max={100}
+                onChange={setCurrent}
+              />
+              <Slider
+                label="Decay coefficient"
+                value={activeBeta}
+                min={0}
+                max={255}
+                onChange={setBeta}
+                suffix=" / 256"
+              />
+              <Slider
+                label="Firing threshold"
+                value={activeThreshold}
+                min={32}
+                max={512}
+                step={16}
+                onChange={setThreshold}
+              />
+            </div>
+            {isHwActive && (
+              <div style={{ fontSize: '10px', color: '#ff9f43', marginTop: '15px', border: '1px solid #ff9f43', padding: '8px', borderRadius: '4px' }}>
+                <b>TWIN ACTIVE</b><br/>Parameters are locked to the running Verilog simulation.
+              </div>
+            )}
             <div className="technical-note">
               <span>ARITHMETIC CONTRACT</span>
               <code>v = floor(βq × v / 256) + I</code>
@@ -294,14 +353,16 @@ function Lab() {
                 <h3>Membrane potential</h3>
                 <p>100 discrete time steps · pre-reset state</p>
               </div>
-              <span className="small-badge">LIVE CALCULATION</span>
+              <span className="small-badge" style={{ borderColor: isHwActive ? '#c6f36b' : undefined, color: isHwActive ? '#c6f36b' : undefined }}>
+                {isHwActive ? 'LIVE RTL TRACE' : 'LIVE CALCULATION'}
+              </span>
             </div>
             <div className="legend">
-              <span className="green">Integer</span>
-              <span className="gray">Floating reference</span>
+              <span className="green">{isHwActive ? 'Hardware Twin' : 'Integer'}</span>
+              {!isHwActive && <span className="gray">Floating reference</span>}
               <span className="ochre">Threshold</span>
             </div>
-            <Trace rows={rows} threshold={threshold} />
+            <Trace rows={rows} threshold={activeThreshold} />
             <div className="axis">
               <span>t = 0</span>
               <span>Output spikes</span>
@@ -311,16 +372,16 @@ function Lab() {
               <Metric
                 label="Output spikes"
                 value={spikeCount}
-                note="Integer neuron / 100 steps"
+                note={isHwActive ? "Hardware twin / last 100 cyc" : "Integer neuron / 100 steps"}
               />
               <Metric
                 label="Spike disagreements"
                 value={mismatches}
-                note="Integer vs floating reference"
+                note={isHwActive ? "Verilog vs Python twin" : "Integer vs floating reference"}
               />
               <Metric
                 label="Decay retention"
-                value={(beta / 256).toFixed(4)}
+                value={(activeBeta / 256).toFixed(4)}
                 note="Dimensionless / per step"
               />
             </div>
@@ -579,12 +640,15 @@ function NavigationTwin() {
   const [speed, setSpeed] = useState(1);
   const [obstacle, setObstacle] = useState("near");
   const [resetToken, setResetToken] = useState(0);
+  const [hwTwin, setHwTwin] = useState(false);
   const [telemetry, setTelemetry] = useState({
     distance: 14,
     events: 0,
     membrane: 0,
     spikes: 0,
     avoids: 0,
+    collisions: 0,
+    completed: 0,
     decision: "FORWARD",
     x: 0,
   });
@@ -606,11 +670,14 @@ function NavigationTwin() {
             running={running}
             speed={speed}
             obstacle={obstacle}
+            hwTwin={hwTwin}
             resetToken={resetToken}
             onFrame={setTelemetry}
           />
           <div className="twin-overlay top">
-            <span className="small-badge">CONCEPTUAL DIGITAL MODEL</span>
+            <span className="small-badge" style={{ borderColor: hwTwin ? '#c6f36b' : undefined, color: hwTwin ? '#c6f36b' : undefined }}>
+              {hwTwin ? 'LIVE RTL SYNC' : 'CONCEPTUAL DIGITAL MODEL'}
+            </span>
             <span className={`decision ${telemetry.decision.toLowerCase()}`}>
               <i /> {telemetry.decision}
             </span>
@@ -625,6 +692,14 @@ function NavigationTwin() {
             <div className="control-title">
               <h3>Scenario controls</h3>
               <div>
+                <button
+                  className="icon-button"
+                  style={{ width: 'auto', padding: '0 8px', fontSize: '11px', color: hwTwin ? '#c6f36b' : 'inherit', borderColor: hwTwin ? '#58774a' : 'inherit', background: hwTwin ? '#111a15' : 'transparent', marginRight: '8px' }}
+                  onClick={() => setHwTwin(!hwTwin)}
+                  title="Toggle RTL Hardware Twin Sync"
+                >
+                  ⚡ HW Sync: {hwTwin ? 'ON' : 'OFF'}
+                </button>
                 <IconButton
                   title={
                     running
@@ -689,7 +764,7 @@ function NavigationTwin() {
               <small>V = {telemetry.membrane}</small>
             </div>
             <ArrowRight size={15} />
-            <div className={telemetry.decision === "AVOID" ? "active" : ""}>
+            <div className={telemetry.decision !== "FORWARD" ? "active" : ""}>
               <span>04</span>
               <Workflow size={17} />
               <b>Act</b>
@@ -708,17 +783,22 @@ function NavigationTwin() {
               note="Cumulative this run"
             />
             <Metric
-              label="Avoid triggers"
+              label="Obstacles handled"
               value={telemetry.avoids}
-              note="Rule-driven responses"
+              note="This route"
             />
+          </div>
+          <div className="twin-safety" role="status">
+            <span>Completed routes <b>{telemetry.completed}</b></span>
+            <span>Contacts <b>{telemetry.collisions}</b></span>
           </div>
           <div className="twin-explanation">
             <span>WHAT THE SOLUTION DOES</span>
             <p>
               As the obstacle approaches, proximity becomes a sparse event
               current. The integer neuron integrates it; threshold activity
-              activates a deterministic steering rule. The scene and numbers are
+              activates a predictive lane choice. When the path is blocked, the
+              vehicle brakes until it can continue. The scene and numbers are
               driven by that shared state in real time.
             </p>
           </div>

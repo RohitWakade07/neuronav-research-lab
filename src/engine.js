@@ -60,6 +60,105 @@ export function navigationStep({
     spike: Number(spike),
   };
 }
+export const CITY_ROUTE_START = 32;
+export const CITY_ROUTE_END = -184;
+export const CITY_OBSTACLES = [
+  { id: 0, z: -7, phase: 0 },
+  { id: 1, z: -55, phase: 1.8 },
+  { id: 2, z: -103, phase: 3.6 },
+  { id: 3, z: -151, phase: 5.4 },
+];
+
+export function obstacleX(mode, time, phase = 0) {
+  if (mode === "crossing") return Math.sin(time * 0.72 + phase) * 3.7;
+  return mode === "offset" ? 2.9 : 0;
+}
+
+export function createCityState() {
+  return {
+    x: 0, z: CITY_ROUTE_START, time: 0, membrane: 0,
+    spikes: 0, avoids: 0, collisions: 0, completed: 0,
+    activeId: -1, lane: 0, decision: "FORWARD",
+    distance: 32, events: 0, pre: 0,
+  };
+}
+
+function overlaps(x, z, obstacleXValue, obstacleZ, margin = 0) {
+  return Math.abs(x - obstacleXValue) < 2.05 + margin &&
+    Math.abs(z - obstacleZ) < 2.55 + margin;
+}
+
+export function advanceCityState(previous, { mode = "near", speed = 1, dt = 0.05, hwNeuron = null } = {}) {
+  const step = Math.max(0, Math.min(0.05, dt));
+  if (step === 0) return previous;
+  const time = previous.time + step * speed;
+  const travelRate = 4.1;
+  const nextObstacle = CITY_OBSTACLES.find((item) => item.z < previous.z + 2.55);
+  const obstacle = nextObstacle || CITY_OBSTACLES.at(-1);
+  const dz = previous.z - obstacle.z;
+  const projectedTime = time + Math.max(0, dz - 5) / travelRate;
+  const predictedX = obstacleX(mode, projectedTime, obstacle.phase);
+  const sensedDistance = Math.max(0.5, Math.hypot(previous.x - obstacleX(mode, time, obstacle.phase), dz) - 1.2);
+  const neuron = hwNeuron || navigationStep({ distance: sensedDistance, membrane: previous.membrane });
+  let lane = previous.lane;
+  let activeId = previous.activeId;
+  let avoids = previous.avoids;
+  const activeObstacle = CITY_OBSTACLES.find((item) => item.id === activeId);
+  if (activeObstacle && previous.z < activeObstacle.z - 3.4) {
+    lane = 0;
+    activeId = -1;
+  }
+  if (nextObstacle && nextObstacle.id !== activeId && dz < 23 && dz > -2.55) {
+    activeId = nextObstacle.id;
+    lane = predictedX >= 0 ? -3.45 : 3.45;
+    avoids++;
+  }
+  const approach = Math.max(-3.45, Math.min(3.45, lane - previous.x));
+  const candidateX = previous.x + Math.sign(approach) * Math.min(Math.abs(approach), 3.5 * step * speed);
+  const candidateZ = previous.z - travelRate * step * speed;
+  const activeObstacles = CITY_OBSTACLES.filter((item) => Math.abs(item.z - previous.z) < 9);
+  const unsafe = activeObstacles.some((item) => {
+    const currentX = obstacleX(mode, previous.time, item.phase);
+    const futureX = obstacleX(mode, time, item.phase);
+    const inCrossing = candidateZ < item.z + 2.85 && candidateZ > item.z - 2.85;
+    const crossingTimeLeft = Math.max(0, (candidateZ - (item.z - 2.85)) / travelRate) + 0.05;
+    const crossingWindowBlocked = mode === "crossing" && inCrossing &&
+      (Math.abs(candidateX - lane) > 0.3 ||
+        Array.from({ length: Math.ceil(crossingTimeLeft / 0.05) + 1 }, (_, index) => index * 0.05).some((ahead) =>
+          Math.abs(candidateX - obstacleX(mode, time + ahead, item.phase)) < 2.3,
+        ));
+    // Substeps cover the swept motion of both the vehicle and a crossing object.
+    return crossingWindowBlocked || [0.25, 0.5, 0.75, 1].some((fraction) =>
+      overlaps(
+        previous.x + (candidateX - previous.x) * fraction,
+        previous.z + (candidateZ - previous.z) * fraction,
+        currentX + (futureX - currentX) * fraction,
+        item.z,
+        0.2,
+      ),
+    );
+  });
+  const x = unsafe ? previous.x : candidateX;
+  const z = unsafe ? previous.z : candidateZ;
+  const completed = previous.completed + Number(z <= CITY_ROUTE_END);
+  const decision = unsafe ? "BRAKE" : lane !== 0 ? "AVOID" : "FORWARD";
+  return {
+    x: completed > previous.completed ? 0 : x,
+    z: completed > previous.completed ? CITY_ROUTE_START : z,
+    time,
+    membrane: neuron.membrane,
+    pre: neuron.pre,
+    spikes: previous.spikes + neuron.spike,
+    avoids,
+    collisions: previous.collisions,
+    completed,
+    activeId: completed > previous.completed ? -1 : activeId,
+    lane: completed > previous.completed ? 0 : lane,
+    decision,
+    distance: sensedDistance,
+    events: neuron.events,
+  };
+}
 export function estimate({
   hidden = 128,
   steps = 25,
