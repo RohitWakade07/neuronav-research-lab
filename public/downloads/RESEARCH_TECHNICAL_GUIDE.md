@@ -2,6 +2,10 @@
 
 Version 0.1.0 | 23 September 2026 | Research demonstration application
 
+Live application: https://neuronav-research-lab.vercel.app
+
+Source repository (private, owner access required): https://github.com/RohitWakade07/neuronav-research-lab
+
 ## 1. What Has Been Built
 
 NeuroNav is a browser-based research demonstrator for spiking-neuron arithmetic and FPGA-oriented architecture exploration. It contains an interactive Three.js chip scene, a deterministic LIF neuron laboratory, a dense-network cycle/storage estimator, experiment-report import, simulation export, downloadable Colab templates, and primary-source references.
@@ -241,6 +245,7 @@ Before expanding to navigation, select a realistic control task and data-generat
 The starting requirements came from the user-supplied `SNN_FPGA_Synopsis_EDAI (1).pdf` and the previous `NeuroNav_Final_Architecture_Execution_Plan.md`. The original PDF is not republished by this app. The supplied notebooks and plan are available as historical working artifacts, with the corrections above.
 
 - MNIST original benchmark: https://yann.lecun.org/exdb/mnist/
+- Official Torchvision MNIST loader: https://docs.pytorch.org/vision/stable/generated/torchvision.datasets.MNIST.html
 - snnTorch LIF parameters and reset defaults: https://snntorch.readthedocs.io/en/latest/snn.neurons_leaky.html
 - snnTorch surrogate gradients: https://snntorch.readthedocs.io/en/latest/snntorch.surrogate.html
 - Training Spiking Neural Networks Using Lessons From Deep Learning: https://arxiv.org/abs/2109.12894
@@ -253,3 +258,5 @@ The starting requirements came from the user-supplied `SNN_FPGA_Synopsis_EDAI (1
 - Vercel Vite deployment: https://vercel.com/docs/frameworks/frontend/vite
 
 These sources support benchmark/tool descriptions. Equations and schedules identified as this application's contract are design choices. No unexecuted result has been promoted to a measured research claim.
+
+Retrieval note: the original MNIST URL above was inherited from the previous plan and timed out during this implementation's live check. The app links to the reachable official Torchvision MNIST documentation. Tonic, cocotb, Yosys, snnTorch and Vercel documentation were retrieved during this task. No dataset archive was downloaded or its checksum verified during web-app delivery.

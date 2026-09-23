@@ -33,8 +33,8 @@ const fmt = (n) => n.toLocaleString("en-US");
 const sources = [
   [
     "MNIST",
-    "Original digit-classification benchmark",
-    "https://yann.lecun.org/exdb/mnist/",
+    "Official Torchvision dataset loader",
+    "https://docs.pytorch.org/vision/stable/generated/torchvision.datasets.MNIST.html",
   ],
   [
     "snnTorch",
