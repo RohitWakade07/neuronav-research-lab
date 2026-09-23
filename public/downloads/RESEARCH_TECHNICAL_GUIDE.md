@@ -8,7 +8,7 @@ Source repository (private, owner access required): https://github.com/RohitWaka
 
 ## 1. What Has Been Built
 
-NeuroNav is a browser-based research demonstrator for spiking-neuron arithmetic and FPGA-oriented architecture exploration. It contains an interactive Three.js chip scene, a deterministic LIF neuron laboratory, a dense-network cycle/storage estimator, experiment-report import, simulation export, downloadable Colab templates, and primary-source references.
+NeuroNav is a browser-based research demonstrator for spiking-neuron arithmetic and FPGA-oriented architecture exploration. It contains an interactive Three.js chip scene, a deterministic LIF neuron laboratory, a real-time reactive-navigation scenario, a dense-network cycle/storage estimator, experiment-report import, simulation export, downloadable Colab templates, and primary-source references.
 
 The chip is a conceptual rendering created procedurally in Three.js. Its animated particles illustrate spike pathways; they are not telemetry from the neuron laboratory or a fabricated physical device. The app contains no trained classifier, robot controller, event-camera integration, FPGA connection, or measured power results. All initial model-accuracy fields are pending. Imported reports are explicitly attributed to the user and are not independently verified by the application.
 
@@ -16,17 +16,18 @@ The original synopsis names reactive navigation but its initial implementation s
 
 ## 2. Evidence and Requirements
 
-| Requirement | Implemented artifact | Evidence boundary |
-| --- | --- | --- |
-| Interactive product presentation | Three.js chip, moving paths, orbit interaction, pause, responsive landing page | Conceptual visualization only |
-| LIF dynamics | Integer and floating-reference traces, stimulus controls, exports | Executed browser arithmetic |
-| Fixed-point behavior | Quantized decay, floor rounding, signed state saturation, immediate reset | Single-neuron contract, not a quantized trained network |
-| FPGA architecture exploration | 784-H-10 topology, lane/clock/precision controls | Analytical estimates, not simulator cycle measurements |
-| Model training | Original Colab training template available to download | No executed training result supplied |
-| Experiment evidence | JSON import with bounded structural validation | User-reported values; provenance not authenticated |
-| RTL equivalence | Planned test protocol below | Not yet executed |
-| Navigation | Dataset and evaluation plan below | Future experiment |
-| Deployment | Vite build, GitHub source, Vercel hosting | Hosting is independent of scientific validation |
+| Requirement                      | Implemented artifact                                                                  | Evidence boundary                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Interactive product presentation | Three.js chip, moving paths, orbit interaction, pause, responsive landing page        | Conceptual visualization only                                        |
+| LIF dynamics                     | Integer and floating-reference traces, stimulus controls, exports                     | Executed browser arithmetic                                          |
+| Reactive-navigation scenario     | Procedural road, obstacle modes, proximity events, neuron state and steering response | Conceptual deterministic model; no trained policy or vehicle physics |
+| Fixed-point behavior             | Quantized decay, floor rounding, signed state saturation, immediate reset             | Single-neuron contract, not a quantized trained network              |
+| FPGA architecture exploration    | 784-H-10 topology, lane/clock/precision controls                                      | Analytical estimates, not simulator cycle measurements               |
+| Model training                   | Original Colab training template available to download                                | No executed training result supplied                                 |
+| Experiment evidence              | JSON import with bounded structural validation                                        | User-reported values; provenance not authenticated                   |
+| RTL equivalence                  | Planned test protocol below                                                           | Not yet executed                                                     |
+| Navigation                       | Dataset and evaluation plan below                                                     | Future experiment                                                    |
+| Deployment                       | Vite build, GitHub source, Vercel hosting                                             | Hosting is independent of scientific validation                      |
 
 The browser app deliberately distinguishes computed values, analytical estimates, imported reports, and missing experiments. A SHA-256 string in a report identifies a claimed checkpoint; the browser does not possess that checkpoint to verify its hash.
 
@@ -53,17 +54,18 @@ The delivered runtime is a static client application. Vercel serves the compiled
 
 ### Source Map
 
-| Path | Responsibility |
-| --- | --- |
-| `src/main.jsx` | Page composition, laboratory controls, evidence import and downloads |
-| `src/Scene.jsx` | Chip geometry, lighting, moving spike markers, pointer orbit and lifecycle cleanup |
-| `src/engine.js` | Pure LIF arithmetic, architecture estimator, evidence validation, export utility |
-| `src/style.css` | Responsive layout, visual tokens, reduced-motion support |
-| `tests/engine.test.js` | Numeric boundary and estimator tests |
-| `e2e/app.spec.js` | Browser workflows, responsive checks, WebGL pixel checks and animation behavior |
-| `public/downloads/` | Research guide, templates and original planning artifacts |
-| `vite.config.js` | React build and code splitting |
-| `vercel.json` | Vite deployment and SPA rewrites |
+| Path                      | Responsibility                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| `src/main.jsx`            | Page composition, laboratory controls, evidence import and downloads                  |
+| `src/Scene.jsx`           | Chip geometry, lighting, moving spike markers, pointer orbit and lifecycle cleanup    |
+| `src/NavigationScene.jsx` | Road scene, vehicle, obstacle behavior, event visualization and synchronized steering |
+| `src/engine.js`           | Pure LIF arithmetic, architecture estimator, evidence validation, export utility      |
+| `src/style.css`           | Responsive layout, visual tokens, reduced-motion support                              |
+| `tests/engine.test.js`    | Numeric boundary and estimator tests                                                  |
+| `e2e/app.spec.js`         | Browser workflows, responsive checks, WebGL pixel checks and animation behavior       |
+| `public/downloads/`       | Research guide, templates and original planning artifacts                             |
+| `vite.config.js`          | React build and code splitting                                                        |
+| `vercel.json`             | Vite deployment and SPA rewrites                                                      |
 
 ## 4. Neuron Contract
 
@@ -91,6 +93,14 @@ Stimuli:
 The plot displays pre-reset potential, a threshold line and integer output spikes. Export includes both pre- and post-reset states, floating reference, saturation flags, full configuration and engine version `neuro-nav-lif-v1`.
 
 ## 5. Architecture Estimator
+
+### Reactive-navigation scenario
+
+The Navigation Twin explains a proposed sensing-to-action path in one synchronized 3D scene. Obstacle range is converted to a normalized proximity value over a 4-to-18 scene-unit interval. The encoder emits 0-to-32 synthetic events. Each event contributes eight integer current units to a LIF neuron with `beta_q = 224`, denominator 256 and threshold 150. On threshold, the neuron resets to zero. When proximity exceeds 0.35, a deterministic steering rule chooses the side opposite the obstacle and eases the vehicle toward a fixed lateral target.
+
+The scene offers blocked-lane, crossing-obstacle and partially blocked-lane configurations. The displayed sensor distance, event count, pre-reset membrane value, spike count, decision and vehicle offset are derived from the same live simulation state. Sensor rays and moving particles visualize the encoding path. Pause stops the vehicle and neuron accumulation; reset recreates the scenario state.
+
+Scene units are presented as metres for explanation but are not calibrated against a robotics simulator. Timing depends on browser animation frames, and the road contains no rigid-body, tire, braking, collision or actuator model. `AVOID` means the deterministic threshold rule is active. It is not a prediction from the unexecuted MNIST model, a learned navigation policy, a proof of collision avoidance or FPGA output. Its purpose is to show how event encoding, integer neuron integration and action selection would connect before a real navigation dataset and controller exist.
 
 For hidden width H, 10 outputs, P parallel accumulation lanes and T timesteps:
 
@@ -174,14 +184,14 @@ Use cocotb with a supported simulator, or a self-checking HDL testbench. Compare
 
 Percentage completion is a project-management rubric, not a model performance metric. The following proposed allocation must be accepted by the research supervisor before being treated as an official percentage. Credit is awarded only after all evidence for a row exists.
 
-| Work package | Project points | Acceptance evidence | Current state |
-| --- | ---: | --- | --- |
-| Requirements and experiment protocol | 5 | Approved traceability, claim boundaries and protocol | Draft documented; approval pending |
-| Reproducible training | 10 | Executed notebook, saved checkpoint, exact environment and data splits | Pending |
-| Floating and integer network evaluation | 10 | Paired held-out metrics, calibrated scales and raw predictions | Pending |
-| RTL proof block | 10 | Passing golden-model comparison, simulator logs and vectors | Pending |
-| Display application | 5 | Working controls, exports, responsive view and deployment | Implemented; verify with test report |
-| Remaining research and hardware work | 60 | Larger validation, comparison, synthesis, navigation scope and paper | Future |
+| Work package                            | Project points | Acceptance evidence                                                    | Current state                        |
+| --------------------------------------- | -------------: | ---------------------------------------------------------------------- | ------------------------------------ |
+| Requirements and experiment protocol    |              5 | Approved traceability, claim boundaries and protocol                   | Draft documented; approval pending   |
+| Reproducible training                   |             10 | Executed notebook, saved checkpoint, exact environment and data splits | Pending                              |
+| Floating and integer network evaluation |             10 | Paired held-out metrics, calibrated scales and raw predictions         | Pending                              |
+| RTL proof block                         |             10 | Passing golden-model comparison, simulator logs and vectors            | Pending                              |
+| Display application                     |              5 | Working controls, exports, responsive view and deployment              | Implemented; verify with test report |
+| Remaining research and hardware work    |             60 | Larger validation, comparison, synthesis, navigation scope and paper   | Future                               |
 
 The web application can demonstrate the display package and neuron arithmetic now. It must not display an earned 40% score until the other acceptance evidence exists. This prevents a polished product view from being mistaken for completed experiments.
 
@@ -228,7 +238,7 @@ Unit tests cover equality at threshold, zero input, a known positive trace, nega
 
 Generated screenshots and numerical tests are engineering QA. They provide no accuracy or energy benchmark. See `VALIDATION_REPORT.md` for actual execution outcomes; this guide describes the checks rather than implying they all passed before execution.
 
-Display sequence: open the product page; pause and rotate the conceptual chip; enter the lab; compare constant, burst and pulse traces; change decay and threshold; inspect actual output-spike disagreement; explore lane/clock assumptions; export the run; open the evidence section and show pending experiments. Import only a measured experiment report. End by showing the acceptance gates and source documentation.
+Display sequence: open the product page; pause and rotate the conceptual chip; enter the lab; compare constant, burst and pulse traces; change decay and threshold; inspect actual output-spike disagreement; open the Navigation Twin and select each obstacle behavior; point out how distance changes event count, membrane state and the steering decision; explore lane/clock assumptions; export the run; open the evidence section and show pending experiments. Import only a measured experiment report. End by showing the acceptance gates and source documentation.
 
 If WebGL is unavailable, the app presents a fallback message while the numerical lab remains usable. The page supports reduced motion and keyboard-accessible native controls. Google Fonts has system-font fallbacks; the app remains functional if that external font service is unavailable.
 

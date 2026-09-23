@@ -1,6 +1,6 @@
 # NeuroNav Research Lab
 
-An interactive research prototype with a Three.js product page, integer/floating LIF laboratory, FPGA architecture estimates and attributed experiment evidence. Built with React and Vite for Vercel.
+An interactive research prototype with a Three.js product page, integer/floating LIF laboratory, a real-time reactive-navigation scenario, FPGA architecture estimates and attributed experiment evidence. Built with React and Vite for Vercel.
 
 ## Run
 
@@ -22,7 +22,7 @@ Start the development server before browser tests. Use `TEST_BASE_URL` to test a
 
 ## Research Integrity
 
-This release contains no trained classifier, hardware measurements or navigation controller. The 3D chip is conceptual. Neuron traces are computed; architecture timings are analytical estimates. Imported experiments are user-reported and not independently verified. The 40% research milestone remains gated by measured model results and RTL equivalence.
+This release contains no trained classifier, hardware measurements or learned navigation controller. The 3D chip and road scenario are conceptual. The road vehicle is driven by a deterministic proximity-to-event encoder, the fixed-point neuron step and a steering rule; it is an explanatory digital model rather than a physics or safety benchmark. Neuron traces are computed; architecture timings are analytical estimates. Imported experiments are user-reported and not independently verified. The 40% research milestone remains gated by measured model results and RTL equivalence.
 
 Read the [research and technical guide](public/downloads/RESEARCH_TECHNICAL_GUIDE.md) for equations, assumptions, dataset decisions, notebook corrections, evaluation protocols and deployment instructions. Read [validation outcomes](public/downloads/VALIDATION_REPORT.md) for engineering checks.
 

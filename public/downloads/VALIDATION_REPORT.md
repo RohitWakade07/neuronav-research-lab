@@ -4,13 +4,14 @@ Date: 23 September 2026
 
 ## Local Results
 
-- Numeric unit tests: 7 passed. Includes threshold equality, zero current, positive trace, negative floor rounding, saturation, architecture math and malformed report rejection.
+- Numeric unit tests: 8 passed. Includes threshold equality, zero current, positive trace, negative floor rounding, saturation, architecture math, malformed report rejection and far/near navigation encoding behavior.
 - Production Vite build: passed. The Three.js chunk triggers the build's size advisory; it is approximately 139 KB gzipped. No build errors remain.
 - Desktop browser workflow: passed at 1440 x 1000.
 - Mobile browser workflow: passed at 390 x 844.
 - Wide browser workflow: passed at 1920 x 1080.
 - Reduced-motion test: passed.
 - Browser tests checked actual canvas pixels, frame changes, pause, pointer orbit, horizontal overflow, sliders, architecture calculations, JSON export, report import/rejection/clearing and notebook/guide downloads.
+- A dedicated navigation-twin browser test checks a nonblank 3D render, telemetry visibility, obstacle selection, simulation speed, pause state and reset control.
 - Desktop and mobile full-page screenshots were visually inspected.
 - Dependency installation audit: zero vulnerabilities reported for the installed dependency tree at build time. This is not a comprehensive security audit.
 

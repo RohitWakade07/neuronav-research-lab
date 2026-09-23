@@ -39,6 +39,27 @@ export function simulate({
     };
   });
 }
+export function navigationStep({
+  distance,
+  membrane = 0,
+  beta = 224,
+  threshold = 150,
+}) {
+  const proximity = Math.max(0, Math.min(1, (18 - distance) / 14));
+  const events = Math.round(proximity * 32);
+  const current = events * 8;
+  const raw = Math.floor((beta * membrane) / 256) + current;
+  const pre = Math.max(-32768, Math.min(32767, raw));
+  const spike = pre >= threshold;
+  return {
+    proximity,
+    events,
+    current,
+    pre,
+    membrane: spike ? 0 : pre,
+    spike: Number(spike),
+  };
+}
 export function estimate({
   hidden = 128,
   steps = 25,

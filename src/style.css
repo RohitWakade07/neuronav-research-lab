@@ -591,6 +591,178 @@ input[type="range"] {
   background: #edf1e6;
   border-block: 1px solid #dfe5d6;
 }
+.twin-section {
+  padding: 80px 5%;
+  background: #111a15;
+  color: #edf4e8;
+}
+.twin-heading .eyebrow {
+  color: #9db988;
+  margin-bottom: 13px;
+}
+.twin-heading .section-description {
+  color: #8d9b8f;
+}
+.twin-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(330px, 0.8fr);
+  border: 1px solid #334239;
+  min-height: 620px;
+}
+.twin-stage {
+  min-width: 0;
+  position: relative;
+  border-right: 1px solid #334239;
+  overflow: hidden;
+}
+.nav-scene {
+  position: absolute;
+  inset: 0;
+}
+.nav-scene canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: pan-y;
+}
+.twin-overlay {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+}
+.twin-overlay.top {
+  top: 18px;
+}
+.twin-overlay.bottom {
+  bottom: 16px;
+  color: #8c9b90;
+  font-size: 9px;
+}
+.twin-section .small-badge {
+  color: #c6f36b;
+  border-color: #4c5d4e;
+  background: #111a15cc;
+}
+.decision {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  padding: 7px 10px;
+  background: #132019dd;
+  border: 1px solid #3b4e40;
+}
+.decision i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #93c454;
+}
+.decision.avoid {
+  color: #ffcf83;
+}
+.decision.avoid i {
+  background: #ff9f43;
+}
+.twin-panel {
+  padding: 25px;
+  background: #17221b;
+  min-width: 0;
+}
+.twin-controls {
+  border-bottom: 1px solid #334239;
+}
+.twin-controls .control-title > div {
+  display: flex;
+  gap: 7px;
+}
+.twin-controls .icon-button {
+  color: #d6e0d4;
+  border-color: #435247;
+}
+.twin-controls .field {
+  color: #b9c5b7;
+}
+.twin-controls select {
+  background: #111a15;
+  border-color: #3b4b40;
+  color: #e2e9df;
+}
+.twin-controls .slider-label {
+  color: #b9c5b7;
+}
+.signal-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+  align-items: center;
+  gap: 5px;
+  padding: 24px 0;
+  border-bottom: 1px solid #334239;
+}
+.signal-flow > div {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  text-align: center;
+  color: #718078;
+  transition: color 0.2s;
+}
+.signal-flow > div.active {
+  color: #c6f36b;
+}
+.signal-flow > div > span {
+  font-size: 7px;
+}
+.signal-flow b {
+  font-size: 9px;
+  font-weight: 500;
+}
+.signal-flow small {
+  font-size: 7px;
+  color: #829087;
+}
+.signal-flow > svg {
+  color: #506057;
+}
+.twin-readouts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 23px 0;
+  border-bottom: 1px solid #334239;
+}
+.twin-readouts .metric > span,
+.twin-readouts .metric small {
+  color: #819086;
+}
+.twin-readouts .metric strong {
+  color: #eff6ec;
+  font-size: 25px;
+}
+.twin-explanation {
+  margin-top: 23px;
+  padding: 17px;
+  background: #111a15;
+  border-left: 2px solid #c6f36b;
+}
+.twin-explanation span {
+  font-size: 8px;
+  color: #a4b69e;
+}
+.twin-explanation p {
+  font-size: 11px;
+  color: #adb9af;
+  line-height: 1.75;
+  margin-top: 10px;
+}
+.twin-panel .fineprint {
+  color: #748279;
+}
 .pipeline {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -855,6 +1027,12 @@ footer > a:last-child {
     font-size: 72px;
   }
 }
+@media (min-width: 1500px) {
+  .twin-section {
+    padding-left: max(5%, calc((100% - 1320px) / 2));
+    padding-right: max(5%, calc((100% - 1320px) / 2));
+  }
+}
 @media (max-width: 1000px) {
   .hero h1 > span {
     font-size: 49px;
@@ -895,6 +1073,18 @@ footer > a:last-child {
   }
   .notebooks .notebook-note {
     margin-left: 0;
+  }
+}
+@media (max-width: 1000px) {
+  .twin-shell {
+    grid-template-columns: 1.25fr 1fr;
+  }
+  .signal-flow {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .signal-flow > svg {
+    display: none;
   }
 }
 @media (max-width: 700px) {
@@ -1166,6 +1356,30 @@ footer > a:last-child {
   }
   .network > svg {
     width: 18px;
+  }
+}
+@media (max-width: 700px) {
+  .twin-section {
+    padding: 48px 6%;
+  }
+  .twin-shell {
+    display: block;
+    min-height: 0;
+  }
+  .twin-stage {
+    height: 430px;
+    border-right: 0;
+    border-bottom: 1px solid #334239;
+  }
+  .twin-panel {
+    padding: 20px 16px;
+  }
+  .twin-readouts .metric strong {
+    font-size: 21px;
+  }
+  .twin-overlay {
+    left: 12px;
+    right: 12px;
   }
 }
 .hero h1 {

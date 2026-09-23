@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { simulate, estimate, validateEvidence } from "../src/engine.js";
+import {
+  simulate,
+  estimate,
+  validateEvidence,
+  navigationStep,
+} from "../src/engine.js";
 test("threshold equality spikes and resets immediately", () =>
   assert.deepEqual(simulate({ current: 128, steps: 1 })[0], {
     t: 0,
@@ -49,4 +54,12 @@ test("rejects malformed evidence", () => {
       fixedAccuracy: 0.9,
     }),
   );
+});
+test("navigation sensor is quiet at range and spikes near an obstacle", () => {
+  const far = navigationStep({ distance: 20 });
+  assert.equal(far.events, 0);
+  assert.equal(far.spike, 0);
+  const near = navigationStep({ distance: 4 });
+  assert.ok(near.events > 0);
+  assert.equal(near.spike, 1);
 });

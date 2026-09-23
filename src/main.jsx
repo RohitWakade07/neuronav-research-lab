@@ -21,6 +21,7 @@ import {
   Workflow,
 } from "lucide-react";
 import Scene from "./Scene";
+import NavigationScene from "./NavigationScene";
 import {
   simulate,
   estimate,
@@ -573,6 +574,164 @@ function Evidence() {
     </section>
   );
 }
+function NavigationTwin() {
+  const [running, setRunning] = useState(true);
+  const [speed, setSpeed] = useState(1);
+  const [obstacle, setObstacle] = useState("near");
+  const [resetToken, setResetToken] = useState(0);
+  const [telemetry, setTelemetry] = useState({
+    distance: 14,
+    events: 0,
+    membrane: 0,
+    spikes: 0,
+    avoids: 0,
+    decision: "FORWARD",
+    x: 0,
+  });
+  return (
+    <section id="twin" className="twin-section">
+      <div className="section-heading twin-heading">
+        <div>
+          <p className="eyebrow">02 / REACTIVE NAVIGATION TWIN</p>
+          <h2>See a spike change the route.</h2>
+        </div>
+        <p className="section-description">
+          A conceptual real-time scenario linking proximity events to the same
+          fixed-point LIF behavior used in the laboratory.
+        </p>
+      </div>
+      <div className="twin-shell">
+        <div className="twin-stage">
+          <NavigationScene
+            running={running}
+            speed={speed}
+            obstacle={obstacle}
+            resetToken={resetToken}
+            onFrame={setTelemetry}
+          />
+          <div className="twin-overlay top">
+            <span className="small-badge">CONCEPTUAL DIGITAL MODEL</span>
+            <span className={`decision ${telemetry.decision.toLowerCase()}`}>
+              <i /> {telemetry.decision}
+            </span>
+          </div>
+          <div className="twin-overlay bottom">
+            <span>Drag to orbit · scroll to zoom</span>
+            <span>Vehicle offset {telemetry.x.toFixed(2)} m</span>
+          </div>
+        </div>
+        <aside className="twin-panel">
+          <div className="twin-controls">
+            <div className="control-title">
+              <h3>Scenario controls</h3>
+              <div>
+                <IconButton
+                  title={
+                    running
+                      ? "Pause navigation simulation"
+                      : "Run navigation simulation"
+                  }
+                  onClick={() => setRunning(!running)}
+                >
+                  {running ? <Pause size={15} /> : <Play size={15} />}
+                </IconButton>
+                <IconButton
+                  title="Reset navigation simulation"
+                  onClick={() => setResetToken((n) => n + 1)}
+                >
+                  <RotateCcw size={15} />
+                </IconButton>
+              </div>
+            </div>
+            <label className="field">
+              Obstacle behavior
+              <select
+                value={obstacle}
+                onChange={(event) => setObstacle(event.target.value)}
+              >
+                <option value="near">Blocked lane</option>
+                <option value="crossing">Crossing obstacle</option>
+                <option value="offset">Partially blocked lane</option>
+              </select>
+            </label>
+            <Slider
+              label="Simulation speed"
+              value={speed}
+              min={0.5}
+              max={2}
+              step={0.25}
+              onChange={setSpeed}
+              suffix="×"
+            />
+          </div>
+          <div
+            className="signal-flow"
+            aria-label="Sensor to action signal flow"
+          >
+            <div className={telemetry.events > 0 ? "active" : ""}>
+              <span>01</span>
+              <Activity size={17} />
+              <b>Sense</b>
+              <small>{telemetry.distance.toFixed(1)} m</small>
+            </div>
+            <ArrowRight size={15} />
+            <div className={telemetry.events > 8 ? "active" : ""}>
+              <span>02</span>
+              <Layers size={17} />
+              <b>Encode</b>
+              <small>{telemetry.events} events</small>
+            </div>
+            <ArrowRight size={15} />
+            <div className={telemetry.membrane >= 100 ? "active" : ""}>
+              <span>03</span>
+              <Cpu size={17} />
+              <b>Integrate</b>
+              <small>V = {telemetry.membrane}</small>
+            </div>
+            <ArrowRight size={15} />
+            <div className={telemetry.decision === "AVOID" ? "active" : ""}>
+              <span>04</span>
+              <Workflow size={17} />
+              <b>Act</b>
+              <small>{telemetry.decision}</small>
+            </div>
+          </div>
+          <div className="twin-readouts">
+            <Metric
+              label="Sensor events"
+              value={telemetry.events}
+              note="Synthetic proximity encoding"
+            />
+            <Metric
+              label="Neuron spikes"
+              value={telemetry.spikes}
+              note="Cumulative this run"
+            />
+            <Metric
+              label="Avoid triggers"
+              value={telemetry.avoids}
+              note="Rule-driven responses"
+            />
+          </div>
+          <div className="twin-explanation">
+            <span>WHAT THE SOLUTION DOES</span>
+            <p>
+              As the obstacle approaches, proximity becomes a sparse event
+              current. The integer neuron integrates it; threshold activity
+              activates a deterministic steering rule. The scene and numbers are
+              driven by that shared state in real time.
+            </p>
+          </div>
+          <p className="fineprint">
+            This demonstrates the proposed sensing-to-action path. It is not a
+            trained navigation policy, physics benchmark, FPGA execution, or
+            safety validation.
+          </p>
+        </aside>
+      </div>
+    </section>
+  );
+}
 function App() {
   const [paused, setPaused] = useState(false),
     [menu, setMenu] = useState(false);
@@ -588,6 +747,7 @@ function App() {
         <nav className={menu ? "open" : ""} aria-label="Main navigation">
           {[
             ["The laboratory", "#lab"],
+            ["Navigation twin", "#twin"],
             ["Architecture", "#architecture"],
             ["Research", "#evidence"],
           ].map(([a, b]) => (
@@ -685,6 +845,7 @@ function App() {
           </div>
         </div>
         <Lab />
+        <NavigationTwin />
         <section id="architecture" className="architecture-section">
           <div className="section-heading">
             <div>

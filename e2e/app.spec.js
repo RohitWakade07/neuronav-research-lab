@@ -102,32 +102,28 @@ for (const [name, width, height] of [
     const report = JSON.parse(fs.readFileSync(await file.path(), "utf8"));
     expect(report.rows).toHaveLength(100);
     expect(report.kind).toBe("software-simulation");
-    await page
-      .locator("input[type=file]")
-      .setInputFiles({
-        name: "invalid.json",
-        mimeType: "application/json",
-        buffer: Buffer.from("{}"),
-      });
+    await page.locator("input[type=file]").setInputFiles({
+      name: "invalid.json",
+      mimeType: "application/json",
+      buffer: Buffer.from("{}"),
+    });
     await expect(page.getByRole("alert")).toContainText("Expected schema");
-    await page
-      .locator("input[type=file]")
-      .setInputFiles({
-        name: "test-fixture.json",
-        mimeType: "application/json",
-        buffer: Buffer.from(
-          JSON.stringify({
-            schema: "neuronav-evidence-v1",
-            dataset: "MNIST",
-            split: "test",
-            samples: 1,
-            floatAccuracy: 0,
-            fixedAccuracy: 0,
-            runId: "AUTOMATED-TEST-FIXTURE",
-            checkpointSha256: "a".repeat(64),
-          }),
-        ),
-      });
+    await page.locator("input[type=file]").setInputFiles({
+      name: "test-fixture.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(
+        JSON.stringify({
+          schema: "neuronav-evidence-v1",
+          dataset: "MNIST",
+          split: "test",
+          samples: 1,
+          floatAccuracy: 0,
+          fixedAccuracy: 0,
+          runId: "AUTOMATED-TEST-FIXTURE",
+          checkpointSha256: "a".repeat(64),
+        }),
+      ),
+    });
     await expect(page.getByRole("status")).toContainText(
       "not independently verified",
     );
@@ -161,4 +157,32 @@ test("reduced motion keeps scene still", async ({ page }) => {
   const first = await canvas.screenshot();
   await page.waitForTimeout(400);
   expect(Buffer.compare(first, await canvas.screenshot())).toBe(0);
+});
+test("navigation twin runs, exposes telemetry, and responds to controls", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/#twin");
+  const section = page.locator("#twin");
+  await expect(
+    section.getByRole("heading", { name: "See a spike change the route." }),
+  ).toBeVisible();
+  const canvas = section.locator(".nav-scene canvas");
+  await expect(canvas).toBeVisible();
+  await page.waitForTimeout(1200);
+  const pixels = pixelStats(await frame(canvas));
+  expect(pixels.lit).toBeGreaterThan(1000);
+  expect(pixels.colors).toBeGreaterThan(30);
+  await section.getByLabel("Obstacle behavior").selectOption("crossing");
+  await section.getByLabel("Simulation speed").fill("2");
+  await expect(section.getByText(/events$/).first()).toBeVisible();
+  await section
+    .getByRole("button", { name: "Pause navigation simulation" })
+    .click();
+  await expect(
+    section.getByRole("button", { name: "Run navigation simulation" }),
+  ).toBeVisible();
+  await section
+    .getByRole("button", { name: "Reset navigation simulation" })
+    .click();
 });
