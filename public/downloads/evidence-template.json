@@ -1,0 +1,11 @@
+{
+  "schema": "neuronav-evidence-v1",
+  "runId": "REPLACE_WITH_MEASURED_RUN_ID",
+  "dataset": "MNIST",
+  "split": "test",
+  "samples": 10000,
+  "floatAccuracy": null,
+  "fixedAccuracy": null,
+  "checkpointSha256": "REPLACE_WITH_CHECKPOINT_SHA256",
+  "notes": "Template only. Replace null values with measured fractions in [0,1]. Never invent metrics. The application validates structure but cannot verify provenance."
+}
